@@ -1,0 +1,67 @@
+
+# Create the bridge
+
+[root@host2 ~]# ip link add br_test type bridge
+[root@host2 ~]# ip link set br_test up
+[root@host2 ~]# ip link set eth1 master br_test
+[root@host2 ~]# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN qlen 1000
+    link/ether 80:1f:02:ff:fb:63 brd ff:ff:ff:ff:ff:ff
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq master br_test state UP qlen 1000
+    link/ether 9c:b6:54:12:58:d0 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.38/24 brd 192.168.1.255 scope global dynamic eth1
+       valid_lft 43062sec preferred_lft 43062sec
+    inet6 fe80::9eb6:54ff:fe12:58d0/64 scope link 
+       valid_lft forever preferred_lft forever
+4: eth2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000
+    link/ether 9c:b6:54:12:58:d1 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.0.101/24 brd 10.0.0.255 scope global eth2
+       valid_lft forever preferred_lft forever
+    inet6 fe80::9eb6:54ff:fe12:58d1/64 scope link 
+       valid_lft forever preferred_lft forever
+5: virbr0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN 
+    link/ether 52:54:00:2a:82:a8 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0
+       valid_lft forever preferred_lft forever
+6: virbr0-nic: <BROADCAST,MULTICAST> mtu 1500 qdisc pfifo_fast master virbr0 state DOWN qlen 500
+    link/ether 52:54:00:2a:82:a8 brd ff:ff:ff:ff:ff:ff
+7: br_test: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP 
+    link/ether 9c:b6:54:12:58:d0 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::dc4c:68ff:fe8c:7345/64 scope link 
+       valid_lft forever preferred_lft forever
+
+# Create the virtual server and get its IP
+
+[root@host2 ~]# virsh console opensusetest
+Connected to domain opensusetest
+Escape character is ^]
+
+Welcome to openSUSE 13.2 "Harlequin" - Kernel 3.16.6-2-desktop (ttyS0).
+
+
+opensuse login: root
+Password: 
+Last login: Sun Jun 26 20:03:44 on ttyS0
+Have a lot of fun...
+opensuse:~ # ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: ens3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:25:bc:2b brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.35/24 brd 192.168.1.255 scope global ens3
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe25:bc2b/64 scope link 
+       valid_lft forever preferred_lft forever
+
+# send a ping from my laptop and monitor with tcpdump
+[root@host2 ~]# tcpdump -vvv -i br_test -w /tmp/bridge.tcpdump
